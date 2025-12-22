@@ -106,8 +106,16 @@
                 <label for="specialty" class="col-3 col-form-label">
                     Speciality</label>
                 <div class="col-9">
-                    <input type="text" name="specialty"
-                           id="specialty" class="form-control"/>
+                    <!-- <input type="text" name="specialty"
+                           id="specialty" class="form-control"/> -->
+                    <!-- CHANGE FROM TEXT INPUT TO DROPDOWN -->
+                    <select name="specialty" id="specialty" class="form-control">
+                        <option value="">Select a Course</option>
+                        <option th:each="course : ${courses}"
+                                th:value="${course.name}"
+                                th:text="${course.name}">
+                        </option>
+                    </select>
                 </div>
             </div>
             <button type="submit" class="btn btn-primary">Add Teacher</button>
