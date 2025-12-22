@@ -5,11 +5,8 @@
     <title>Courses Page</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-
-
-    </head>
+</head>
 <body>
-
 
 <div class="container">
     <div class="row m-4">
@@ -17,6 +14,8 @@
             <h1><a href="/" class="text-dark">Course Manager</a></h1>
         </div>
     </div>
+    
+    <!-- Navigation Buttons -->
     <div class="row m-4 border border-dark">
         <div class="col text-center m-3">
             <a href="teachers" class="btn btn-outline-primary btn-lg">Teachers</a>
@@ -28,17 +27,22 @@
             <a href="courses" class="btn btn-outline-primary btn-lg">Courses</a>
         </div>
     </div>
+    
+    <!-- Error Message Display -->
+    <div th:if="${errorMessage}" class="row m-4">
+        <div class="col">
+            <div class="alert alert-danger" role="alert">
+                <strong>Error:</strong> <span th:text="${errorMessage}"></span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Courses Table -->
     <div class="row m-4 border border-dark">
         <div class="col text-center m-3">
             <table class="table table-striped">
                 <thead>
                 <tr>
-                    <!-- <th>ID</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Specialty</th>
-                    <th>Edit</th>
-                    <th>Delete</th> -->
                     <th>ID</th>
                     <th>Course Name</th>
                     <th>Description</th>
@@ -52,22 +56,72 @@
                     <td th:text="${course.id}">Course ID</td>
                     <td th:text="${course.name}">Course Name</td>
                     <td th:text="${course.description}">Description</td>
-                    <!-- <td th:text="${course.teacher}">Teacher</td> -->
-                     <td th:text="${course.teacher != null ? course.teacher.firstName + ' ' + course.teacher.lastName : 'Unassigned'}">
+                    <td th:text="${course.teacher != null ? course.teacher.firstName + ' ' + course.teacher.lastName : 'Unassigned'}">
                         Teacher
                     </td>
-
-                    <td>Edit</td>
-                    <td>Delete</td>
+                    <td>
+                        <a th:href="@{/courseDetail(id=${course.id})}" class="btn btn-warning btn-sm">Edit</a>
+                    </td>
+                    <td>
+                        <a th:href="@{/deleteCourse(id=${course.id})}" 
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Are you sure you want to delete this course?')">
+                            Delete
+                        </a>
+                    </td>
                 </tr>
                 </tbody>
             </table>
         </div>
     </div>
+    
+    <!-- Add Course Form -->
+    <div class="row m-4 border border-dark">
+        <div class="col-3 text-center m-3">
+            <span class="h3">Add New Course</span>
+        </div>
+        <div class="col-7 text-center m-3">
+            <form action="addCourse" method="POST">
+                <div class="form-group row">
+                    <label for="name" class="col-3 col-form-label">Course Name</label>
+                    <div class="col-9">
+                        <input type="text" name="name" id="name" class="form-control" required/>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="description" class="col-3 col-form-label">Description</label>
+                    <div class="col-9">
+                        <textarea name="description" id="description" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="teacherId" class="col-3 col-form-label">Assign Teacher</label>
+                    <div class="col-9">
+                        <select name="teacherId" id="teacherId" class="form-control">
+                            <option value="">-- No Teacher --</option>
+                            <option th:each="teacher : ${teachers}"
+                                    th:value="${teacher.id}"
+                                    th:text="${teacher.firstName + ' ' + teacher.lastName}">
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success">Add Course</button>
+            </form>
+        </div>
+    </div>
 </div>
-<!-- Optional JavaScript -->
-<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+
+<!-- JavaScript for delete confirmation -->
+<script>
+    function confirmDelete(courseName) {
+        return confirm("Are you sure you want to delete '" + courseName + "'? This action cannot be undone.");
+    }
+</script>
+
+<!-- Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script></body>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+</body>
 </html>

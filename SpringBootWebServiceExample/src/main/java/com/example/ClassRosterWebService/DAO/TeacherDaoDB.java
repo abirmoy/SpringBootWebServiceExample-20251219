@@ -46,13 +46,16 @@ public class TeacherDaoDB implements TeacherDao {
     }
 
     @Override
-    public List<String> getTeacherByCourse()
-    {
-        final String GET_TEACHER_BY_COURSE = "Select t.Firstname, t.lastName, c.name \n" +
-                "from teacher t \n" +
-                "join course c on t.id = c.teacherId;";
+    public List<String> getTeacherByCourse() {
+        // Updated to use both relationships
+        final String GET_TEACHER_BY_COURSE = 
+            "SELECT DISTINCT t.firstName, t.lastName, c.name " +
+            "FROM teacher t " +
+            "LEFT JOIN course c ON (t.id = c.teacherId OR t.specialty = c.name) " +
+            "WHERE c.name IS NOT NULL " +
+            "ORDER BY c.name, t.lastName";
+        
         return jdbc.query(GET_TEACHER_BY_COURSE, new TeacherByCourseMapper());
-
     }
 
 @Override
@@ -73,9 +76,9 @@ public class TeacherDaoDB implements TeacherDao {
 
     @Override
     public void updateTeacher(Teacher teacher) {
-        final String UPDATE_TEACHER = "UPDATE teac" +
-                "her SET firstName = ?, lastName = ?, " +
+        final String UPDATE_TEACHER = "UPDATE teacher SET firstName = ?, lastName = ?, " +
                 "specialty = ? WHERE id = ?";
+        
         jdbc.update(UPDATE_TEACHER,
                 teacher.getFirstName(),
                 teacher.getLastName(),
@@ -85,7 +88,23 @@ public class TeacherDaoDB implements TeacherDao {
 
 
     @Override
+    @Transactional
     public void deleteTeacherById(int id) {
+        // First, check if teacher is assigned to any courses
+        final String CHECK_COURSE_ASSIGNMENT = 
+            "SELECT COUNT(*) FROM course WHERE teacherId = ?";
+        
+        int courseCount = jdbc.queryForObject(CHECK_COURSE_ASSIGNMENT, Integer.class, id);
+        
+        if (courseCount > 0) {
+            throw new RuntimeException("Teacher is assigned to " + courseCount + " course(s)");
+        }
+        
+        // Remove teacher from courses (set teacherId to NULL)
+        final String REMOVE_FROM_COURSES = "UPDATE course SET teacherId = NULL WHERE teacherId = ?";
+        jdbc.update(REMOVE_FROM_COURSES, id);
+        
+        // Delete the teacher
         final String DELETE_TEACHER = "DELETE FROM teacher WHERE id = ?";
         jdbc.update(DELETE_TEACHER, id);
     }

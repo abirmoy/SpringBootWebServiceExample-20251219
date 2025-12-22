@@ -6,18 +6,18 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
           integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-
-
 </head>
 <body>
 
-
 <div class="container">
+    <!-- Page Title -->
     <div class="row m-4">
         <div class="col text-center border border-dark">
             <h1><a href="/" class="text-dark"> === Teachers ===</a></h1>
         </div>
     </div>
+    
+    <!-- Navigation Buttons -->
     <div class="row m-4 border border-dark">
         <div class="col text-center m-3">
             <a href="teachers" class="btn btn-outline-primary btn-lg">Teachers</a>
@@ -29,6 +29,32 @@
             <a href="courses" class="btn btn-outline-primary btn-lg">Courses</a>
         </div>
     </div>
+    
+    <!-- Success Message Display -->
+    <div th:if="${successMessage}" class="row m-4">
+        <div class="col">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>Success!</strong> <span th:text="${successMessage}"></span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Error Message Display -->
+    <div th:if="${errorMessage}" class="row m-4">
+        <div class="col">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>Error:</strong> <span th:text="${errorMessage}"></span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Teachers Table -->
     <div class="row m-4 border border-dark">
         <div class="col text-center m-3">
             <table class="table table-striped">
@@ -48,84 +74,90 @@
                     <td th:text="${teacher.firstName}">Teacher First Name</td>
                     <td th:text="${teacher.lastName}">Teacher Last Name</td>
                     <td th:text="${teacher.specialty}">Teacher Specialty</td>
-                    <td>Edit</td>
-                   <td><a href="#" th:href="@{/deleteTeacher(id=${teacher.id})}">Delete</a></td>
+                    <td>
+                        <a th:href="@{/editTeacher(id=${teacher.id})}" 
+                           class="btn btn-warning btn-sm">Edit</a>
+                    </td>
+                    <td>
+                        <a th:href="@{/deleteTeacher(id=${teacher.id})}" 
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Are you sure you want to delete this teacher? This action cannot be undone.')">
+                            Delete
+                        </a>
+                    </td>
                 </tr>
                 </tbody>
             </table>
         </div>
     </div>
-</div>
-
-
-<div class="row m-4 border border-dark">
-    <div class="col text-center m-3">
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th>Teacher / Course</th>
-
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="teachercourser : ${teachercourse}">
-                <td th:text="${teachercourser}"></td>
-
-
-            </tr>
-            </tbody>
-        </table>
+    
+    <!-- Teacher-Course Relationships Table -->
+    <div class="row m-4 border border-dark">
+        <div class="col text-center m-3">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Teacher / Course Relationships</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="teachercourser : ${teachercourse}">
+                    <td th:text="${teachercourser}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
-</div>
-<!-- Now put in form HTML -->
-<div class="row m-4 border border-dark">
-    <div class="col-3 text-center m-3">
-        <span class="h3">Add Teacher</span>
-    </div>
-    <div class="col-7 text-center m-3">
-        <!-- Form to grab details of a new teacher -->
-        <form action="addTeacher" method="POST">
-            <div class="form-group row">
-                <label for="firstName" class="col-3 col-form-label">
-                    First Name</label>
-                <div class="col-9">
-                    <input type="text" name="firstName"
-                           id="firstName" class="form-control"/>
+    
+    <!-- Add Teacher Form -->
+    <div class="row m-4 border border-dark">
+        <div class="col-3 text-center m-3">
+            <span class="h3">Add Teacher</span>
+        </div>
+        <div class="col-7 text-center m-3">
+            <form action="addTeacher" method="POST">
+                <div class="form-group row">
+                    <label for="firstName" class="col-3 col-form-label">
+                        First Name</label>
+                    <div class="col-9">
+                        <input type="text" name="firstName"
+                               id="firstName" class="form-control" required
+                               placeholder="Enter first name"/>
+                    </div>
                 </div>
-            </div>
-            <div class="form-group row">
-                <label for="lastName" class="col-3 col-form-label">
-                    Last Name</label>
-                <div class="col-9">
-                    <input type="text" name="lastName"
-                           id="lastName" class="form-control"/>
+                <div class="form-group row">
+                    <label for="lastName" class="col-3 col-form-label">
+                        Last Name</label>
+                    <div class="col-9">
+                        <input type="text" name="lastName"
+                               id="lastName" class="form-control" required
+                               placeholder="Enter last name"/>
+                    </div>
                 </div>
-            </div>
-            <div class="form-group row">
-                <label for="specialty" class="col-3 col-form-label">
-                    Speciality</label>
-                <div class="col-9">
-                    <!-- <input type="text" name="specialty"
-                           id="specialty" class="form-control"/> -->
-                    <!-- CHANGE FROM TEXT INPUT TO DROPDOWN -->
-                    <select name="specialty" id="specialty" class="form-control">
-                        <option value="">Select a Course</option>
-                        <option th:each="course : ${courses}"
-                                th:value="${course.name}"
-                                th:text="${course.name}">
-                        </option>
-                    </select>
+                <div class="form-group row">
+                    <label for="specialty" class="col-3 col-form-label">
+                        Speciality (Course)</label>
+                    <div class="col-9">
+                        <select name="specialty" id="specialty" class="form-control" required>
+                            <option value="">-- Select a Course --</option>
+                            <option th:each="course : ${courses}"
+                                    th:value="${course.name}"
+                                    th:text="${course.name}">
+                            </option>
+                        </select>
+                        <small class="form-text text-muted">
+                            Select the course this teacher specializes in
+                        </small>
+                    </div>
                 </div>
-            </div>
-            <button type="submit" class="btn btn-primary">Add Teacher</button>
-        </form>
-
-
+                <button type="submit" class="btn btn-primary">Add Teacher</button>
+                <button type="reset" class="btn btn-secondary">Clear Form</button>
+            </form>
+        </div>
     </div>
 </div>
 
-<!-- Optional JavaScript -->
+<!-- JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
@@ -136,5 +168,23 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
         integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
         crossorigin="anonymous"></script>
+
+<!-- JavaScript for auto-dismiss alerts after 5 seconds -->
+<script>
+    $(document).ready(function() {
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').alert('close');
+        }, 5000);
+        
+        // Confirm delete with teacher name
+        $('a[href*="deleteTeacher"]').click(function(e) {
+            var teacherName = $(this).closest('tr').find('td:nth-child(2)').text() + ' ' + 
+                             $(this).closest('tr').find('td:nth-child(3)').text();
+            return confirm('Are you sure you want to delete teacher "' + teacherName.trim() + '"?\n\nThis action cannot be undone.');
+        });
+    });
+</script>
+
 </body>
 </html>

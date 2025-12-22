@@ -19,4 +19,5 @@ public interface CourseDao {
     List<Course> getCoursesForTeacher(Teacher teacher);
 
  //   List<Course> getCoursesForStudent(Student student);
+    boolean isCourseInUse(int courseId);
 }
