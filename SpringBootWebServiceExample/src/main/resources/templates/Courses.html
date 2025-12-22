@@ -33,10 +33,16 @@
             <table class="table table-striped">
                 <thead>
                 <tr>
-                    <th>ID</th>
+                    <!-- <th>ID</th>
                     <th>First Name</th>
                     <th>Last Name</th>
                     <th>Specialty</th>
+                    <th>Edit</th>
+                    <th>Delete</th> -->
+                    <th>ID</th>
+                    <th>Course Name</th>
+                    <th>Description</th>
+                    <th>Teacher</th>
                     <th>Edit</th>
                     <th>Delete</th>
                 </tr>
@@ -46,7 +52,11 @@
                     <td th:text="${course.id}">Course ID</td>
                     <td th:text="${course.name}">Course Name</td>
                     <td th:text="${course.description}">Description</td>
-                    <td th:text="${course.teacher}">Teacher</td>
+                    <!-- <td th:text="${course.teacher}">Teacher</td> -->
+                     <td th:text="${course.teacher != null ? course.teacher.firstName + ' ' + course.teacher.lastName : 'Unassigned'}">
+                        Teacher
+                    </td>
+
                     <td>Edit</td>
                     <td>Delete</td>
                 </tr>
