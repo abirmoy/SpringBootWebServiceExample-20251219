@@ -46,7 +46,7 @@
                     <th>ID</th>
                     <th>Course Name</th>
                     <th>Description</th>
-                    <th>Teacher</th>
+                    <th>Teacher Assignment</th>
                     <th>Edit</th>
                     <th>Delete</th>
                 </tr>
@@ -56,8 +56,20 @@
                     <td th:text="${course.id}">Course ID</td>
                     <td th:text="${course.name}">Course Name</td>
                     <td th:text="${course.description}">Description</td>
-                    <td th:text="${course.teacher != null ? course.teacher.firstName + ' ' + course.teacher.lastName : 'Unassigned'}">
-                        Teacher
+                    <td>
+                        <span th:if="${course.teacher != null}">
+                            <strong th:text="${course.teacher.firstName + ' ' + course.teacher.lastName}"></strong>
+                            <!-- <br><small class="text-muted">(Assigned via teacherId)</small> -->
+                        </span>
+                        <span th:if="${course.teacher == null}">
+                            <span th:if="${course.hasTeachersViaSpecialty}" class="text-warning">
+                                <i class="fas fa-exclamation-triangle"></i> Assigned via Teacher Specialty
+                                <br><small class="text-muted">(Teachers have this as their specialty)</small>
+                            </span>
+                            <span th:if="${!course.hasTeachersViaSpecialty}">
+                                <span class="text-muted">Unassigned</span>
+                            </span>
+                        </span>
                     </td>
                     <td>
                         <a th:href="@{/courseDetail(id=${course.id})}" class="btn btn-warning btn-sm">Edit</a>
@@ -95,7 +107,7 @@
                     </div>
                 </div>
                 <div class="form-group row">
-                    <label for="teacherId" class="col-3 col-form-label">Assign Teacher</label>
+                    <label for="teacherId" class="col-3 col-form-label">Assign Teacher (Optional)</label>
                     <div class="col-9">
                         <select name="teacherId" id="teacherId" class="form-control">
                             <option value="">-- No Teacher --</option>
@@ -104,6 +116,9 @@
                                     th:text="${teacher.firstName + ' ' + teacher.lastName}">
                             </option>
                         </select>
+                        <small class="form-text text-muted">
+                            Note: Teachers can also be assigned via the Teachers page
+                        </small>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-success">Add Course</button>
@@ -112,10 +127,13 @@
     </div>
 </div>
 
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
 <!-- JavaScript for delete confirmation -->
 <script>
     function confirmDelete(courseName) {
-        return confirm("Are you sure you want to delete '" + courseName + "'? This action cannot be undone.");
+        return confirm("Are you sure you want to delete '" + courseName + "'?");
     }
 </script>
 

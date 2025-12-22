@@ -77,13 +77,13 @@ public class TeacherDaoDB implements TeacherDao {
     @Override
     public void updateTeacher(Teacher teacher) {
         final String UPDATE_TEACHER = "UPDATE teacher SET firstName = ?, lastName = ?, " +
-                "specialty = ? WHERE id = ?";
+            "specialty = ? WHERE id = ?";
         
         jdbc.update(UPDATE_TEACHER,
-                teacher.getFirstName(),
-                teacher.getLastName(),
-                teacher.getSpecialty(),
-                teacher.getId());
+            teacher.getFirstName(),
+            teacher.getLastName(),
+            teacher.getSpecialty(),
+            teacher.getId());
     }
 
 

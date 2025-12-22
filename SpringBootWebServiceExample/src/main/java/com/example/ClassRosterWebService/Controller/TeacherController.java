@@ -51,7 +51,7 @@ public class TeacherController {
             return displayTeachers(model, request);
         }
         
-        // Check if teacher is assigned to any courses
+        // Check if teacher is assigned to any courses via teacherId
         List<Course> assignedCourses = courseDao.getCoursesForTeacher(teacher);
         boolean teacherAssignedToCourses = !assignedCourses.isEmpty();
         
@@ -68,12 +68,12 @@ public class TeacherController {
             int id = Integer.parseInt(request.getParameter("id"));
             String firstName = request.getParameter("firstName");
             String lastName = request.getParameter("lastName");
-            String specialty = request.getParameter("specialty");
+            String newSpecialty = request.getParameter("specialty");
             
             // Validate inputs
             if (firstName == null || firstName.trim().isEmpty() || 
                 lastName == null || lastName.trim().isEmpty() ||
-                specialty == null || specialty.trim().isEmpty()) {
+                newSpecialty == null || newSpecialty.trim().isEmpty()) {
                 throw new RuntimeException("All fields are required!");
             }
             
@@ -82,11 +82,16 @@ public class TeacherController {
                 throw new RuntimeException("Teacher not found!");
             }
             
+            String oldSpecialty = teacher.getSpecialty();
+            
             teacher.setFirstName(firstName.trim());
             teacher.setLastName(lastName.trim());
-            teacher.setSpecialty(specialty.trim());
+            teacher.setSpecialty(newSpecialty.trim());
             
             teacherDao.updateTeacher(teacher);
+            
+            // Update course assignments
+            updateCourseTeacherAssignment(oldSpecialty, newSpecialty, teacher);
             
             return "redirect:/teachers?success=Teacher+updated+successfully";
             
@@ -109,7 +114,7 @@ public class TeacherController {
         int id = Integer.parseInt(request.getParameter("id"));
         
         try {
-            // First check if teacher is assigned to any courses
+            // First check if teacher is assigned to any courses via teacherId
             Teacher teacher = teacherDao.getTeacherById(id);
             if (teacher == null) {
                 throw new RuntimeException("Teacher not found!");
@@ -118,7 +123,17 @@ public class TeacherController {
             List<Course> assignedCourses = courseDao.getCoursesForTeacher(teacher);
             if (!assignedCourses.isEmpty()) {
                 throw new RuntimeException("Cannot delete teacher. They are assigned to " + 
-                    assignedCourses.size() + " course(s). Please reassign courses first.");
+                    assignedCourses.size() + " course(s) via teacherId. Please reassign courses first.");
+            }
+            
+            // If teacher has a specialty, remove them from that course's teacherId
+            String specialty = teacher.getSpecialty();
+            if (specialty != null && !specialty.isEmpty() && !specialty.equals("Unassigned")) {
+                Course course = findCourseByName(specialty);
+                if (course != null && course.getTeacher() != null && course.getTeacher().getId() == id) {
+                    course.setTeacher(null);
+                    courseDao.updateCourse(course);
+                }
             }
             
             teacherDao.deleteTeacherById(id);
@@ -158,7 +173,19 @@ public class TeacherController {
             teacher.setLastName(lastName.trim());
             teacher.setSpecialty(specialtyIn.trim());
             
+            // Add the teacher first
             teacherDao.addTeacher(teacher);
+            
+            // Find the course with this name and assign teacherId
+            Course course = findCourseByName(specialtyIn.trim());
+            if (course != null) {
+                // Check if course already has a teacher assigned
+                if (course.getTeacher() != null) {
+                    throw new RuntimeException("Course '" + specialtyIn + "' is already assigned to another teacher!");
+                }
+                course.setTeacher(teacher);
+                courseDao.updateCourse(course);
+            }
             
             return "redirect:/teachers?success=Teacher+added+successfully";
             
@@ -174,6 +201,38 @@ public class TeacherController {
             model.addAttribute("errorMessage", e.getMessage());
             
             return "teachers";
+        }
+    }
+    
+    // Helper method to find course by name
+    private Course findCourseByName(String courseName) {
+        List<Course> allCourses = courseDao.getAllCourses();
+        for (Course course : allCourses) {
+            if (course.getName().equals(courseName)) {
+                return course;
+            }
+        }
+        return null;
+    }
+    
+    // Helper method to update course teacher assignments
+    private void updateCourseTeacherAssignment(String oldSpecialty, String newSpecialty, Teacher teacher) {
+        // Remove teacher from old course's teacherId
+        Course oldCourse = findCourseByName(oldSpecialty);
+        if (oldCourse != null && oldCourse.getTeacher() != null && oldCourse.getTeacher().getId() == teacher.getId()) {
+            oldCourse.setTeacher(null);
+            courseDao.updateCourse(oldCourse);
+        }
+        
+        // Assign teacher to new course's teacherId
+        Course newCourse = findCourseByName(newSpecialty);
+        if (newCourse != null) {
+            // Check if new course already has a teacher assigned
+            if (newCourse.getTeacher() != null && newCourse.getTeacher().getId() != teacher.getId()) {
+                throw new RuntimeException("Course '" + newSpecialty + "' is already assigned to another teacher!");
+            }
+            newCourse.setTeacher(teacher);
+            courseDao.updateCourse(newCourse);
         }
     }
 }

@@ -28,6 +28,10 @@ public class CourseDaoDB implements CourseDao {
             if (course != null) {
                 Teacher teacher = getTeacherForCourse(course.getId());
                 course.setTeacher(teacher);
+                
+                // Check if any teacher has this course as specialty
+                boolean hasTeachersViaSpecialty = checkIfCourseHasTeachersViaSpecialty(course.getName());
+                course.setHasTeachersViaSpecialty(hasTeachersViaSpecialty);
             }
             
             return course;
@@ -61,7 +65,7 @@ public class CourseDaoDB implements CourseDao {
     @Override
     @Transactional
     public void updateCourse(Course course) {
-        // Get old course name before update
+        // Get old course info before update
         Course oldCourse = getCourseById(course.getId());
         String oldName = oldCourse != null ? oldCourse.getName() : null;
         String newName = course.getName();
@@ -69,7 +73,7 @@ public class CourseDaoDB implements CourseDao {
         // Update course
         final String UPDATE_COURSE = "UPDATE course SET name = ?, description = ?, teacherId = ? WHERE id = ?";
         jdbc.update(UPDATE_COURSE,
-                course.getName(),
+                newName,
                 course.getDescription(),
                 course.getTeacher() != null ? course.getTeacher().getId() : null,
                 course.getId());
@@ -104,19 +108,16 @@ public class CourseDaoDB implements CourseDao {
         int teacherAssignedCount = jdbc.queryForObject(CHECK_TEACHER_ASSIGNMENT, Integer.class, id);
         int specialtyReferenceCount = jdbc.queryForObject(CHECK_SPECIALTY_REFERENCE, Integer.class, courseName);
         
-        // Build error message if course is in use
-        if (teacherAssignedCount > 0 || specialtyReferenceCount > 0) {
-            StringBuilder error = new StringBuilder("Cannot delete course '");
-            error.append(courseName).append("'. ");
-            
-            if (teacherAssignedCount > 0) {
-                error.append("It is assigned to a teacher. ");
-            }
-            if (specialtyReferenceCount > 0) {
-                error.append("It is referenced as specialty by ").append(specialtyReferenceCount).append(" teacher(s).");
-            }
-            
-            throw new RuntimeException(error.toString());
+        // Build error message if course is in use via teacherId
+        if (teacherAssignedCount > 0) {
+            throw new RuntimeException("Cannot delete course. It has a teacher assigned via teacherId.");
+        }
+        
+        // If teachers have this course as specialty, update their specialties to "Unassigned"
+        if (specialtyReferenceCount > 0) {
+            final String UPDATE_TEACHER_SPECIALTIES = 
+                "UPDATE teacher SET specialty = 'Unassigned' WHERE specialty = ?";
+            jdbc.update(UPDATE_TEACHER_SPECIALTIES, courseName);
         }
         
         // Delete the course
@@ -137,6 +138,10 @@ public class CourseDaoDB implements CourseDao {
         for (Course course : courses) {
             Teacher teacher = getTeacherForCourse(course.getId());
             course.setTeacher(teacher);
+            
+            // Check if any teacher has this course as specialty
+            boolean hasTeachersViaSpecialty = checkIfCourseHasTeachersViaSpecialty(course.getName());
+            course.setHasTeachersViaSpecialty(hasTeachersViaSpecialty);
         }
     }
 
@@ -152,8 +157,14 @@ public class CourseDaoDB implements CourseDao {
             return null;
         }
     }
-
-    // Check if course is in use by teachers (for warning messages)
+    
+    private boolean checkIfCourseHasTeachersViaSpecialty(String courseName) {
+        final String CHECK_SPECIALTY = "SELECT COUNT(*) FROM teacher WHERE specialty = ?";
+        int count = jdbc.queryForObject(CHECK_SPECIALTY, Integer.class, courseName);
+        return count > 0;
+    }
+    
+    // Add this method to CourseDao interface
     public boolean isCourseInUse(int courseId) {
         Course course = getCourseById(courseId);
         if (course == null) return false;
@@ -179,8 +190,6 @@ public class CourseDaoDB implements CourseDao {
             course.setId(rs.getInt("id"));
             course.setName(rs.getString("name"));
             course.setDescription(rs.getString("description"));
-            
-            // Note: teacher will be set later in associateTeachers method
             return course;
         }
     }

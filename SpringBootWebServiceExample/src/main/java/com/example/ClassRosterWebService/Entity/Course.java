@@ -1,12 +1,13 @@
 package com.example.ClassRosterWebService.Entity;
 
 public class Course {
-
     private int id;
     private String name;
     private String description;
     private Teacher teacher;
-
+    
+    // Transient field (not persisted in database)
+    private boolean hasTeachersViaSpecialty;
 
     public Course() {
     }
@@ -17,7 +18,6 @@ public class Course {
         this.description = description;
         this.teacher = teacher;
     }
-
 
     public int getId() {
         return id;
@@ -50,6 +50,14 @@ public class Course {
     public void setTeacher(Teacher teacher) {
         this.teacher = teacher;
     }
+    
+    public boolean isHasTeachersViaSpecialty() {
+        return hasTeachersViaSpecialty;
+    }
+    
+    public void setHasTeachersViaSpecialty(boolean hasTeachersViaSpecialty) {
+        this.hasTeachersViaSpecialty = hasTeachersViaSpecialty;
+    }
 
     @Override
     public String toString() {
@@ -58,6 +66,7 @@ public class Course {
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", teacher=" + teacher +
+                ", hasTeachersViaSpecialty=" + hasTeachersViaSpecialty +
                 '}';
     }
 }
