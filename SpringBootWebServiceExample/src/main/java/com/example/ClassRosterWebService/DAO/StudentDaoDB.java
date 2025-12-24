@@ -37,6 +37,24 @@ public class StudentDaoDB implements StudentDao {
         }
     }
 
+    // ADD NEW METHOD: Get student by studentId (unique identifier)
+    public Student getStudentByStudentId(String studentId) {
+        try {
+            final String GET_STUDENT_BY_STUDENT_ID = "SELECT * FROM student WHERE studentId = ?";
+            Student student = jdbc.queryForObject(GET_STUDENT_BY_STUDENT_ID, new StudentMapper(), studentId);
+            
+            // Get courses for this student
+            if (student != null) {
+                List<Course> courses = getCoursesForStudent(student.getId());
+                student.setCourses(courses);
+            }
+            
+            return student;
+        } catch (DataAccessException ex) {
+            return null;
+        }
+    }
+
     @Override
     public List<Student> getAllStudents() {
         final String GET_ALL_STUDENTS = "SELECT * FROM student ORDER BY lastName, firstName";
@@ -54,8 +72,17 @@ public class StudentDaoDB implements StudentDao {
     @Override
     @Transactional
     public Student addStudent(Student student) {
-        final String INSERT_STUDENT = "INSERT INTO student(firstName, lastName) VALUES(?,?)";
+        // Check if studentId already exists
+        final String CHECK_STUDENT_ID = "SELECT COUNT(*) FROM student WHERE studentId = ?";
+        int count = jdbc.queryForObject(CHECK_STUDENT_ID, Integer.class, student.getStudentId());
+        
+        if (count > 0) {
+            throw new RuntimeException("Student ID '" + student.getStudentId() + "' already exists!");
+        }
+        
+        final String INSERT_STUDENT = "INSERT INTO student(studentId, firstName, lastName) VALUES(?,?,?)";
         jdbc.update(INSERT_STUDENT,
+                student.getStudentId(),
                 student.getFirstName(),
                 student.getLastName());
 
@@ -66,8 +93,22 @@ public class StudentDaoDB implements StudentDao {
 
     @Override
     public void updateStudent(Student student) {
-        final String UPDATE_STUDENT = "UPDATE student SET firstName = ?, lastName = ? WHERE id = ?";
+        // Check if studentId is being changed and if new one already exists
+        final String GET_OLD_STUDENT = "SELECT studentId FROM student WHERE id = ?";
+        String oldStudentId = jdbc.queryForObject(GET_OLD_STUDENT, String.class, student.getId());
+        
+        if (!oldStudentId.equals(student.getStudentId())) {
+            final String CHECK_STUDENT_ID = "SELECT COUNT(*) FROM student WHERE studentId = ? AND id != ?";
+            int count = jdbc.queryForObject(CHECK_STUDENT_ID, Integer.class, student.getStudentId(), student.getId());
+            
+            if (count > 0) {
+                throw new RuntimeException("Student ID '" + student.getStudentId() + "' already exists!");
+            }
+        }
+        
+        final String UPDATE_STUDENT = "UPDATE student SET studentId = ?, firstName = ?, lastName = ? WHERE id = ?";
         jdbc.update(UPDATE_STUDENT,
+                student.getStudentId(),
                 student.getFirstName(),
                 student.getLastName(),
                 student.getId());
@@ -80,6 +121,10 @@ public class StudentDaoDB implements StudentDao {
         if (isStudentEnrolledInAnyCourse(id)) {
             throw new RuntimeException("Cannot delete student. They are enrolled in one or more courses.");
         }
+        
+        // Remove student reference from user table first
+        final String UPDATE_USER = "UPDATE user SET student_id = NULL WHERE student_id = ?";
+        jdbc.update(UPDATE_USER, id);
         
         final String DELETE_STUDENT = "DELETE FROM student WHERE id = ?";
         jdbc.update(DELETE_STUDENT, id);
@@ -135,12 +180,20 @@ public class StudentDaoDB implements StudentDao {
         int count = jdbc.queryForObject(CHECK_ENROLLMENTS, Integer.class, studentId);
         return count > 0;
     }
+    
+    // NEW METHOD: Check if student ID exists
+    public boolean studentIdExists(String studentId) {
+        final String CHECK_STUDENT_ID = "SELECT COUNT(*) FROM student WHERE studentId = ?";
+        int count = jdbc.queryForObject(CHECK_STUDENT_ID, Integer.class, studentId);
+        return count > 0;
+    }
 
     public static final class StudentMapper implements RowMapper<Student> {
         @Override
         public Student mapRow(ResultSet rs, int index) throws SQLException {
             Student student = new Student();
             student.setId(rs.getInt("id"));
+            student.setStudentId(rs.getString("studentId"));  // ADD THIS LINE
             student.setFirstName(rs.getString("firstName"));
             student.setLastName(rs.getString("lastName"));
             return student;

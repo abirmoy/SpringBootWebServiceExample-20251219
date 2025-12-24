@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface StudentDao {
     Student getStudentById(int id);
+    Student getStudentByStudentId(String studentId);  // ADD THIS METHOD
     List<Student> getAllStudents();
     Student addStudent(Student student);
     void updateStudent(Student student);
@@ -20,4 +21,7 @@ public interface StudentDao {
     
     // Check if student is enrolled in any courses
     boolean isStudentEnrolledInAnyCourse(int studentId);
+    
+    // ADD THIS METHOD
+    boolean studentIdExists(String studentId);
 }

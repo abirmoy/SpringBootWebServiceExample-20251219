@@ -8,6 +8,7 @@ public class User {
     private String username;
     private String password;
     private boolean enabled;
+    private Integer studentId;  // ADD THIS - nullable foreign key to student
     private List<Role> roles;
     
     public User() {
@@ -34,6 +35,10 @@ public class User {
     
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    
+    // ADD GETTER/SETTER FOR STUDENT ID
+    public Integer getStudentId() { return studentId; }
+    public void setStudentId(Integer studentId) { this.studentId = studentId; }
     
     public List<Role> getRoles() { return roles; }
     public void setRoles(List<Role> roles) { this.roles = roles; }
