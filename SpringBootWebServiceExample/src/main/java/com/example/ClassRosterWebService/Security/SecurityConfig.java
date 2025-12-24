@@ -22,8 +22,7 @@ public class SecurityConfig {
     
     @Bean
     public UserDetailsService userDetailsService() {
-        // CHANGE THIS LINE - Use default constructor
-        return new UserDetailsServiceImpl();  // No parameters!
+        return new UserDetailsServiceImpl();
     }
     
     @Bean
@@ -45,8 +44,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 // Public access
-                // Public access - ADD /testHash here
-            .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/testHash").permitAll()
+                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/testHash").permitAll()
                 
                 // Role-based access
                 .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -62,11 +60,16 @@ public class SecurityConfig {
                 .defaultSuccessUrl("/dashboard", true)
                 .permitAll()
             )
+            // .logout(logout -> logout
+            //     .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+            //     .logoutSuccessUrl("/login?logout")
+            //     .permitAll()
+            // ) 
             .logout(logout -> logout
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                .logoutSuccessUrl("/login?logout")
-                .permitAll()
-            )
+            .logoutUrl("/logout")
+            .logoutSuccessUrl("/login?logout")
+            .permitAll()
+)
             .exceptionHandling(exception -> exception
                 .accessDeniedPage("/access-denied")
             );
