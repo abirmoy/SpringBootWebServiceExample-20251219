@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Teacher</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" 
+          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+</head>
+<body>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2 class="mb-4">Edit Teacher</h2>
+            
+            <!-- Error Message Display -->
+            <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+                <strong>Error:</strong> <span th:text="${errorMessage}"></span>
+            </div>
+            
+            <form action="updateTeacher" method="POST">
+                <input type="hidden" name="id" th:value="${teacher.id}"/>
+                
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" class="form-control" id="firstName" name="firstName" 
+                           th:value="${teacher.firstName}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" class="form-control" id="lastName" name="lastName" 
+                           th:value="${teacher.lastName}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="specialty">Specialty (Course)</label>
+                    <select class="form-control" id="specialty" name="specialty" required>
+                        <option value="">-- Select a Course --</option>
+                        <option th:each="course : ${courses}"
+                                th:value="${course.name}"
+                                th:text="${course.name}"
+                                th:selected="${teacher.specialty == course.name}">
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Update Teacher</button>
+                    <a href="/teachers" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+            
+            <!-- Warning if teacher is assigned to courses -->
+            <div th:if="${teacherAssignedToCourses}" class="alert alert-warning mt-3">
+                <strong>Note:</strong> This teacher is assigned to one or more courses. 
+                Changing specialty may affect course assignments.
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

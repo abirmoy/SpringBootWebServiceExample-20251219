@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Course</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+</head>
+<body>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2 class="mb-4">Edit Course</h2>
+            
+            <form action="editCourse" method="POST">
+                <input type="hidden" name="id" th:value="${course.id}"/>
+                
+                <div class="form-group">
+                    <label for="name">Course Name</label>
+                    <input type="text" class="form-control" id="name" name="name" 
+                           th:value="${course.name}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea class="form-control" id="description" name="description" 
+                              rows="3" th:text="${course.description}"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="teacherId">Assign Teacher</label>
+                    <select class="form-control" id="teacherId" name="teacherId">
+                        <option value="">-- No Teacher --</option>
+                        <option th:each="teacher : ${teachers}"
+                                th:value="${teacher.id}"
+                                th:text="${teacher.firstName + ' ' + teacher.lastName}"
+                                th:selected="${course.teacher != null && course.teacher.id == teacher.id}">
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <a href="/courses" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+            
+            <!-- Display warning if course is in use -->
+            <div th:if="${courseInUse}" class="alert alert-warning mt-3">
+                <strong>Note:</strong> This course is assigned to one or more teachers. 
+                Changing the course name may affect teacher assignments.
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
