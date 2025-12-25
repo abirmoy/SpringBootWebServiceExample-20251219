@@ -41,10 +41,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable())  // TEMPORARILY DISABLE CSRF
             .authorizeHttpRequests(auth -> auth
-                // Public access
-                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/testHash").permitAll()
+                // Public access - ADD /debugUser here
+                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/testHash", "/debugUser").permitAll()
                 
                 // Role-based access
                 .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -57,19 +57,14 @@ public class SecurityConfig {
             )
             .formLogin(form -> form
                 .loginPage("/login")
-                .defaultSuccessUrl("/dashboard", true)
+                .defaultSuccessUrl("/", true)
                 .permitAll()
             )
-            // .logout(logout -> logout
-            //     .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-            //     .logoutSuccessUrl("/login?logout")
-            //     .permitAll()
-            // ) 
             .logout(logout -> logout
-            .logoutUrl("/logout")
-            .logoutSuccessUrl("/login?logout")
-            .permitAll()
-) 
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                .logoutSuccessUrl("/login?logout")
+                .permitAll()
+            )
             .exceptionHandling(exception -> exception
                 .accessDeniedPage("/access-denied")
             );

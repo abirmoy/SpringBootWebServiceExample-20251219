@@ -31,7 +31,7 @@
     </div>
     
     <!-- Student View Notice -->
-    <div th:if="${isStudentView}" class="row m-4">
+    <div th:if="${isStudentView != null and isStudentView}" class="row m-4">
         <div class="col">
             <div class="alert alert-info">
                 <strong>Student View:</strong> You are viewing only your own student record.
@@ -64,7 +64,7 @@
     </div>
     
     <!-- Students Table (only shown to ADMIN/TEACHER) -->
-    <div th:if="${not isStudentView}" class="row m-4 border border-dark">
+    <div th:if="${isStudentView != null and not isStudentView}" class="row m-4 border border-dark">
         <div class="col text-center m-3">
             <table class="table table-striped">
                 <thead>
@@ -85,7 +85,7 @@
                     <td th:text="${student.firstName}">First Name</td>
                     <td th:text="${student.lastName}">Last Name</td>
                     <td>
-                        <span th:if="${student.courses != null && !student.courses.isEmpty()}">
+                        <span th:if="${student.courses != null and not student.courses.isEmpty()}">
                             <span th:each="course, stat : ${student.courses}">
                                 <span th:text="${course.name}"></span>
                                 <span th:if="${!stat.last}">, </span>
@@ -95,7 +95,7 @@
                                 (<span th:text="${student.courses.size()}"></span> course(s))
                             </small>
                         </span>
-                        <span th:if="${student.courses == null || student.courses.isEmpty()}" class="text-muted">
+                        <span th:if="${student.courses == null or student.courses.isEmpty()}" class="text-muted">
                             No courses enrolled
                         </span>
                     </td>
@@ -117,7 +117,7 @@
     </div>
     
     <!-- Student View (for STUDENT role) -->
-    <div th:if="${isStudentView}" class="row m-4 border border-dark">
+    <div th:if="${isStudentView != null and isStudentView}" class="row m-4 border border-dark">
         <div class="col text-center m-3">
             <div class="card">
                 <div class="card-header bg-primary text-white">
@@ -128,7 +128,7 @@
                         <p><strong>Student ID:</strong> <span th:text="${student.studentId}"></span></p>
                         <p><strong>Name:</strong> <span th:text="${student.firstName + ' ' + student.lastName}"></span></p>
                         <p><strong>Enrolled Courses:</strong></p>
-                        <ul th:if="${student.courses != null && !student.courses.isEmpty()}">
+                        <ul th:if="${student.courses != null and not student.courses.isEmpty()}">
                             <li th:each="course : ${student.courses}">
                                 <span th:text="${course.name}"></span> - 
                                 <span th:text="${course.description}"></span>
@@ -137,7 +137,7 @@
                                 </span>
                             </li>
                         </ul>
-                        <p th:if="${student.courses == null || student.courses.isEmpty()}" class="text-muted">
+                        <p th:if="${student.courses == null or student.courses.isEmpty()}" class="text-muted">
                             Not enrolled in any courses
                         </p>
                         <a th:href="@{/editStudent(id=${student.id})}" class="btn btn-warning">Edit My Profile</a>
@@ -148,15 +148,12 @@
     </div>
     
     <!-- Add Student Form (only shown to ADMIN/TEACHER) -->
-    <div th:if="${not isStudentView}" class="row m-4 border border-dark">
+    <div th:if="${isStudentView != null and not isStudentView}" class="row m-4 border border-dark">
         <div class="col-3 text-center m-3">
             <span class="h3">Add Student</span>
         </div>
         <div class="col-7 text-center m-3">
             <form action="addStudent" method="POST">
-                <!-- CSRF Token -->
-                <!-- <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" /> -->
-                
                 <div class="form-group row">
                     <label for="studentId" class="col-3 col-form-label">
                         Student ID*</label>
