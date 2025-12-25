@@ -23,7 +23,14 @@
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-10 offset-md-1">
+<<<<<<< HEAD
             <h2 class="mb-4">Edit Student: <span th:text="${student.firstName + ' ' + student.lastName}"></span></h2>
+=======
+            <h2 class="mb-4">
+                <span th:if="${isStudentView != null and isStudentView}">My Student Profile</span>
+                <span th:if="${isStudentView != null and not isStudentView}">Edit Student: <span th:text="${student.firstName + ' ' + student.lastName}"></span></span>
+            </h2>
+>>>>>>> 24ae196 (Student section changes)
             
             <!-- Success Message Display -->
             <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
@@ -43,23 +50,41 @@
             
             <!-- Edit Student Form -->
             <div class="card mb-4">
+<<<<<<< HEAD
                 <div class="card-header bg-primary text-white">
                     <h5>Edit Student Information</h5>
+=======
+                <div class="card-header" th:classappend="${isStudentView != null and isStudentView} ? 'bg-info text-white' : 'bg-primary text-white'">
+                    <h5 th:text="${isStudentView != null and isStudentView} ? 'Edit My Information' : 'Edit Student Information'"></h5>
+>>>>>>> 24ae196 (Student section changes)
                 </div>
                 <div class="card-body">
                     <form action="updateStudent" method="POST">
                         <input type="hidden" name="id" th:value="${student.id}"/>
                         
                         <div class="form-group">
+<<<<<<< HEAD
+=======
+                            <label for="studentId">Student ID</label>
+                            <input type="text" class="form-control" id="studentId" name="studentId" 
+                                   th:value="${student.studentId}" required
+                                   th:readonly="${isStudentView != null and isStudentView}">
+                            <small class="form-text text-muted" th:if="${isStudentView != null and isStudentView}">Student ID cannot be changed</small>
+                        </div>
+                        
+                        <div class="form-group">
+>>>>>>> 24ae196 (Student section changes)
                             <label for="firstName">First Name</label>
                             <input type="text" class="form-control" id="firstName" name="firstName" 
-                                   th:value="${student.firstName}" required>
+                                   th:value="${student.firstName}" required
+                                   th:readonly="${isStudentView != null and isStudentView}">
                         </div>
                         
                         <div class="form-group">
                             <label for="lastName">Last Name</label>
                             <input type="text" class="form-control" id="lastName" name="lastName" 
-                                   th:value="${student.lastName}" required>
+                                   th:value="${student.lastName}" required
+                                   th:readonly="${isStudentView != null and isStudentView}">
                         </div>
                         
                         <div class="form-group">
@@ -76,7 +101,7 @@
                     <h5>Currently Enrolled Courses</h5>
                 </div>
                 <div class="card-body">
-                    <div th:if="${enrolledCourses != null && !enrolledCourses.isEmpty()}">
+                    <div th:if="${enrolledCourses != null and not enrolledCourses.isEmpty()}">
                         <table class="table table-striped">
                             <thead>
                                 <tr>
@@ -84,7 +109,11 @@
                                     <th>Course Name</th>
                                     <th>Description</th>
                                     <th>Teacher</th>
+<<<<<<< HEAD
                                     <th>Action</th>
+=======
+                                    <th th:if="${isStudentView != null and not isStudentView}">Action</th>
+>>>>>>> 24ae196 (Student section changes)
                                 </tr>
                             </thead>
                             <tbody>
@@ -93,7 +122,11 @@
                                     <td th:text="${course.name}"></td>
                                     <td th:text="${course.description}"></td>
                                     <td th:text="${course.teacher != null ? course.teacher.firstName + ' ' + course.teacher.lastName : 'Unassigned'}"></td>
+<<<<<<< HEAD
                                     <td>
+=======
+                                    <td th:if="${isStudentView != null and not isStudentView}">
+>>>>>>> 24ae196 (Student section changes)
                                         <a th:href="@{/unenrollStudent(studentId=${student.id}, courseId=${course.id})}" 
                                            class="btn btn-danger btn-sm"
                                            onclick="return confirm('Unenroll from ' + $(this).closest('tr').find('td:nth-child(2)').text() + '?')">
@@ -103,15 +136,26 @@
                                 </tr>
                             </tbody>
                         </table>
+<<<<<<< HEAD
+=======
+                        <div th:if="${isStudentView != null and isStudentView}" class="alert alert-warning mt-2">
+                            <small>Note: Only administrators or teachers can unenroll students from courses.</small>
+                        </div>
+>>>>>>> 24ae196 (Student section changes)
                     </div>
-                    <div th:if="${enrolledCourses == null || enrolledCourses.isEmpty()}" class="alert alert-warning">
+                    <div th:if="${enrolledCourses == null or enrolledCourses.isEmpty()}" class="alert alert-warning">
                         This student is not enrolled in any courses.
                     </div>
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- Enroll in New Course -->
             <div class="card">
+=======
+            <!-- Enroll in New Course (only for ADMIN/TEACHER) -->
+            <div th:if="${isStudentView != null and not isStudentView}" class="card">
+>>>>>>> 24ae196 (Student section changes)
                 <div class="card-header bg-success text-white">
                     <h5>Enroll in New Course</h5>
                 </div>
@@ -136,6 +180,16 @@
                     </form>
                 </div>
             </div>
+<<<<<<< HEAD
+=======
+            
+            <!-- Student Self-Enrollment Note -->
+            <div th:if="${isStudentView != null and isStudentView}" class="alert alert-info">
+                <h5>Course Enrollment</h5>
+                <p>To enroll in new courses, please contact your academic advisor or administrator.</p>
+                <p>You can view your current courses above.</p>
+            </div>
+>>>>>>> 24ae196 (Student section changes)
         </div>
     </div>
 </div>

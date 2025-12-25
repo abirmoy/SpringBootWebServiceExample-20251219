@@ -51,6 +51,22 @@ public class UserDaoDB implements UserDao {
     }
 
     @Override
+    public User getUserByStudentId(int studentId) {
+        try {
+            final String GET_USER_BY_STUDENT_ID = "SELECT * FROM `user` WHERE student_id = ?";
+            User user = jdbc.queryForObject(GET_USER_BY_STUDENT_ID, new UserMapper(), studentId);
+            
+            if (user != null) {
+                user.setRoles(getRolesForUserId(user.getId()));
+            }
+            
+            return user;
+        } catch (DataAccessException ex) {
+            return null;
+        }
+    }
+
+    @Override
     public List<User> getAllUsers() {
         final String GET_ALL_USERS = "SELECT * FROM `user` ORDER BY username";
         List<User> users = jdbc.query(GET_ALL_USERS, new UserMapper());
@@ -64,11 +80,12 @@ public class UserDaoDB implements UserDao {
 
     @Override
     public User createUser(User user) {
-        final String INSERT_USER = "INSERT INTO `user` (username, password, enabled) VALUES (?, ?, ?)";
+        final String INSERT_USER = "INSERT INTO `user` (username, password, enabled, student_id) VALUES (?, ?, ?, ?)";
         jdbc.update(INSERT_USER, 
                    user.getUsername(), 
                    user.getPassword(), 
-                   user.isEnabled());
+                   user.isEnabled(),
+                   user.getStudentId());
         
         int newId = jdbc.queryForObject("SELECT LAST_INSERT_ID()", Integer.class);
         user.setId(newId);
@@ -77,11 +94,12 @@ public class UserDaoDB implements UserDao {
 
     @Override
     public void updateUser(User user) {
-        final String UPDATE_USER = "UPDATE `user` SET username = ?, password = ?, enabled = ? WHERE id = ?";
+        final String UPDATE_USER = "UPDATE `user` SET username = ?, password = ?, enabled = ?, student_id = ? WHERE id = ?";
         jdbc.update(UPDATE_USER, 
                    user.getUsername(), 
                    user.getPassword(), 
                    user.isEnabled(), 
+                   user.getStudentId(),
                    user.getId());
     }
 
@@ -140,6 +158,10 @@ public class UserDaoDB implements UserDao {
             user.setUsername(rs.getString("username"));
             user.setPassword(rs.getString("password"));
             user.setEnabled(rs.getBoolean("enabled"));
+            
+            // FIXED LINE: Properly map student_id column
+            user.setStudentId(rs.getObject("student_id") != null ? rs.getInt("student_id") : null);
+            
             return user;
         }
     }
