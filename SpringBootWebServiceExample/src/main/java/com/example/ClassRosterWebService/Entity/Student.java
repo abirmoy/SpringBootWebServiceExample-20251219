@@ -5,6 +5,7 @@ import java.util.List;
 
 public class Student {
     private int id;
+    private String studentId;  // ADD THIS FIELD
     private String firstName;
     private String lastName;
     private List<Course> courses; // Courses student is enrolled in
@@ -13,8 +14,9 @@ public class Student {
         this.courses = new ArrayList<>();
     }
 
-    public Student(int id, String firstName, String lastName) {
+    public Student(int id, String studentId, String firstName, String lastName) {
         this.id = id;
+        this.studentId = studentId;  // UPDATE CONSTRUCTOR
         this.firstName = firstName;
         this.lastName = lastName;
         this.courses = new ArrayList<>();
@@ -27,6 +29,15 @@ public class Student {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    // ADD GETTER/SETTER FOR STUDENT ID
+    public String getStudentId() {
+        return studentId;
+    }
+
+    public void setStudentId(String studentId) {
+        this.studentId = studentId;
     }
 
     public String getFirstName() {
@@ -70,6 +81,7 @@ public class Student {
     public String toString() {
         return "Student{" +
                 "id=" + id +
+                ", studentId='" + studentId + '\'' +  // ADD TO STRING
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", courses=" + (courses != null ? courses.size() : 0) +

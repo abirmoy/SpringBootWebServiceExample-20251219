@@ -23,7 +23,10 @@
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-10 offset-md-1">
-            <h2 class="mb-4">Edit Student: <span th:text="${student.firstName + ' ' + student.lastName}"></span></h2>
+            <h2 class="mb-4">
+                <span th:if="${isStudentView != null and isStudentView}">My Student Profile</span>
+                <span th:if="${isStudentView != null and not isStudentView}">Edit Student: <span th:text="${student.firstName + ' ' + student.lastName}"></span></span>
+            </h2>
             
             <!-- Success Message Display -->
             <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
@@ -43,23 +46,33 @@
             
             <!-- Edit Student Form -->
             <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5>Edit Student Information</h5>
+                <div class="card-header" th:classappend="${isStudentView != null and isStudentView} ? 'bg-info text-white' : 'bg-primary text-white'">
+                    <h5 th:text="${isStudentView != null and isStudentView} ? 'Edit My Information' : 'Edit Student Information'"></h5>
                 </div>
                 <div class="card-body">
                     <form action="updateStudent" method="POST">
                         <input type="hidden" name="id" th:value="${student.id}"/>
                         
                         <div class="form-group">
+                            <label for="studentId">Student ID</label>
+                            <input type="text" class="form-control" id="studentId" name="studentId" 
+                                   th:value="${student.studentId}" required
+                                   th:readonly="${isStudentView != null and isStudentView}">
+                            <small class="form-text text-muted" th:if="${isStudentView != null and isStudentView}">Student ID cannot be changed</small>
+                        </div>
+                        
+                        <div class="form-group">
                             <label for="firstName">First Name</label>
                             <input type="text" class="form-control" id="firstName" name="firstName" 
-                                   th:value="${student.firstName}" required>
+                                   th:value="${student.firstName}" required
+                                   th:readonly="${isStudentView != null and isStudentView}">
                         </div>
                         
                         <div class="form-group">
                             <label for="lastName">Last Name</label>
                             <input type="text" class="form-control" id="lastName" name="lastName" 
-                                   th:value="${student.lastName}" required>
+                                   th:value="${student.lastName}" required
+                                   th:readonly="${isStudentView != null and isStudentView}">
                         </div>
                         
                         <div class="form-group">
@@ -76,7 +89,7 @@
                     <h5>Currently Enrolled Courses</h5>
                 </div>
                 <div class="card-body">
-                    <div th:if="${enrolledCourses != null && !enrolledCourses.isEmpty()}">
+                    <div th:if="${enrolledCourses != null and not enrolledCourses.isEmpty()}">
                         <table class="table table-striped">
                             <thead>
                                 <tr>
@@ -84,7 +97,7 @@
                                     <th>Course Name</th>
                                     <th>Description</th>
                                     <th>Teacher</th>
-                                    <th>Action</th>
+                                    <th th:if="${isStudentView != null and not isStudentView}">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -93,7 +106,7 @@
                                     <td th:text="${course.name}"></td>
                                     <td th:text="${course.description}"></td>
                                     <td th:text="${course.teacher != null ? course.teacher.firstName + ' ' + course.teacher.lastName : 'Unassigned'}"></td>
-                                    <td>
+                                    <td th:if="${isStudentView != null and not isStudentView}">
                                         <a th:href="@{/unenrollStudent(studentId=${student.id}, courseId=${course.id})}" 
                                            class="btn btn-danger btn-sm"
                                            onclick="return confirm('Unenroll from ' + $(this).closest('tr').find('td:nth-child(2)').text() + '?')">
@@ -103,15 +116,18 @@
                                 </tr>
                             </tbody>
                         </table>
+                        <div th:if="${isStudentView != null and isStudentView}" class="alert alert-warning mt-2">
+                            <small>Note: Only administrators or teachers can unenroll students from courses.</small>
+                        </div>
                     </div>
-                    <div th:if="${enrolledCourses == null || enrolledCourses.isEmpty()}" class="alert alert-warning">
+                    <div th:if="${enrolledCourses == null or enrolledCourses.isEmpty()}" class="alert alert-warning">
                         This student is not enrolled in any courses.
                     </div>
                 </div>
             </div>
             
-            <!-- Enroll in New Course -->
-            <div class="card">
+            <!-- Enroll in New Course (only for ADMIN/TEACHER) -->
+            <div th:if="${isStudentView != null and not isStudentView}" class="card">
                 <div class="card-header bg-success text-white">
                     <h5>Enroll in New Course</h5>
                 </div>
@@ -135,6 +151,13 @@
                         </div>
                     </form>
                 </div>
+            </div>
+            
+            <!-- Student Self-Enrollment Note -->
+            <div th:if="${isStudentView != null and isStudentView}" class="alert alert-info">
+                <h5>Course Enrollment</h5>
+                <p>To enroll in new courses, please contact your academic advisor or administrator.</p>
+                <p>You can view your current courses above.</p>
             </div>
         </div>
     </div>
