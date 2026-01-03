@@ -43,14 +43,34 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())  // TEMPORARILY DISABLE CSRF
             .authorizeHttpRequests(auth -> auth
-                // Public access - ADD /debugUser here
+                // Public access
                 .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/testHash", "/debugUser").permitAll()
                 
-                // Role-based access
+                // Role-based access with specific URL patterns
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                
+                // Teachers - only ADMIN and TEACHER can access
                 .requestMatchers("/teachers/**").hasAnyRole("ADMIN", "TEACHER")
-                .requestMatchers("/students/**").hasAnyRole("ADMIN", "TEACHER", "STUDENT")
+                .requestMatchers("/editTeacher").hasAnyRole("ADMIN", "TEACHER")
+                .requestMatchers("/updateTeacher").hasAnyRole("ADMIN", "TEACHER")
+                .requestMatchers("/addTeacher").hasRole("ADMIN")  // Only admin can add teachers
+                .requestMatchers("/deleteTeacher").hasRole("ADMIN")  // Only admin can delete teachers
+                
+                // Students - different access levels
+                .requestMatchers("/students").hasAnyRole("ADMIN", "TEACHER", "STUDENT")
+                .requestMatchers("/editStudent").hasAnyRole("ADMIN", "TEACHER", "STUDENT")
+                .requestMatchers("/updateStudent").hasAnyRole("ADMIN", "TEACHER", "STUDENT")
+                .requestMatchers("/addStudent").hasAnyRole("ADMIN", "TEACHER")  // Students cannot add other students
+                .requestMatchers("/deleteStudent").hasAnyRole("ADMIN", "TEACHER")  // Students cannot delete
+                .requestMatchers("/enrollStudent").hasAnyRole("ADMIN", "TEACHER")  // Only admin/teacher can enroll
+                .requestMatchers("/unenrollStudent").hasAnyRole("ADMIN", "TEACHER")  // Only admin/teacher can unenroll
+                
+                // Courses - only ADMIN and TEACHER can access
                 .requestMatchers("/courses/**").hasAnyRole("ADMIN", "TEACHER")
+                .requestMatchers("/courseDetail").hasAnyRole("ADMIN", "TEACHER")
+                .requestMatchers("/addCourse").hasAnyRole("ADMIN", "TEACHER")
+                .requestMatchers("/editCourse").hasAnyRole("ADMIN", "TEACHER")
+                .requestMatchers("/deleteCourse").hasRole("ADMIN")  // Only admin can delete courses
                 
                 // All other requests require authentication
                 .anyRequest().authenticated()

@@ -6,6 +6,7 @@ import com.example.ClassRosterWebService.DAO.UserDao;
 import com.example.ClassRosterWebService.Entity.Student;
 import com.example.ClassRosterWebService.Entity.Course;
 import com.example.ClassRosterWebService.Entity.User;
+import com.example.ClassRosterWebService.Validation.InputValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -35,15 +36,6 @@ public class StudentController {
         String username = authentication.getName();
         User user = userDao.getUserByUsername(username);
         
-        // DEBUG LOGGING
-        System.out.println("=== DISPLAY STUDENTS DEBUG ===");
-        System.out.println("Username: " + username);
-        System.out.println("User object: " + (user != null ? "exists" : "null"));
-        if (user != null) {
-            System.out.println("User ID: " + user.getId());
-            System.out.println("User studentId field: " + user.getStudentId());
-        }
-        
         List<Student> students;
         boolean isStudentView = false;
         
@@ -54,42 +46,30 @@ public class StudentController {
             .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || 
                            a.getAuthority().equals("ROLE_TEACHER"));
         
-        System.out.println("Has STUDENT role: " + hasStudentRole);
-        System.out.println("Has ADMIN/TEACHER role: " + hasAdminTeacherRole);
-        
         if (hasStudentRole && !hasAdminTeacherRole) {
-            System.out.println("DEBUG: User has ONLY STUDENT role (not ADMIN/TEACHER)");
-            
             // Student can only see their own data
             if (user != null && user.getStudentId() != null) {
-                System.out.println("DEBUG: User has studentId = " + user.getStudentId());
                 Student student = studentDao.getStudentById(user.getStudentId());
-                System.out.println("DEBUG: Found student = " + (student != null ? student.getFirstName() + " " + student.getLastName() : "null"));
                 
                 if (student != null) {
                     students = List.of(student); // Only show this student
                     isStudentView = true;
-                    System.out.println("DEBUG: Setting isStudentView = true");
                 } else {
                     // Student record not found
                     students = List.of();
                     model.addAttribute("errorMessage", "Student record not found for this account.");
-                    System.out.println("DEBUG: Student record not found in student table");
                 }
             } else {
                 // Student user not linked to a student record
                 students = List.of();
                 if (user == null) {
                     model.addAttribute("errorMessage", "User account not found.");
-                    System.out.println("DEBUG: User object is null");
                 } else {
                     model.addAttribute("errorMessage", "Student account not properly linked to student record.");
-                    System.out.println("DEBUG: User studentId is null");
                 }
             }
         } else {
             // ADMIN/TEACHER can see all students
-            System.out.println("DEBUG: User is ADMIN/TEACHER (or has multiple roles)");
             students = studentDao.getAllStudents();
         }
         
@@ -101,9 +81,6 @@ public class StudentController {
         
         model.addAttribute("students", students);
         model.addAttribute("isStudentView", isStudentView);
-        System.out.println("DEBUG: Final isStudentView = " + isStudentView);
-        System.out.println("DEBUG: Students list size = " + students.size());
-        System.out.println("=== END DEBUG ===\n");
         
         return "students";
     }
@@ -133,7 +110,17 @@ public class StudentController {
             isStudentView = true;
         } else {
             // ADMIN/TEACHER can edit any student
-            id = Integer.parseInt(request.getParameter("id"));
+            String idParam = request.getParameter("id");
+            if (idParam == null || idParam.trim().isEmpty()) {
+                model.addAttribute("errorMessage", "Student ID is required.");
+                return displayStudents(model, request);
+            }
+            try {
+                id = Integer.parseInt(idParam);
+            } catch (NumberFormatException e) {
+                model.addAttribute("errorMessage", "Invalid student ID format.");
+                return displayStudents(model, request);
+            }
         }
         
         Student student = studentDao.getStudentById(id);
@@ -163,22 +150,33 @@ public class StudentController {
             String firstName = request.getParameter("firstName");
             String lastName = request.getParameter("lastName");
             
-            // Validate inputs
-            if (studentId == null || studentId.trim().isEmpty() ||
-                firstName == null || firstName.trim().isEmpty() || 
-                lastName == null || lastName.trim().isEmpty()) {
-                throw new RuntimeException("All fields are required!");
+            // Validate inputs using InputValidator
+            String studentIdError = InputValidator.validateStudentId(studentId);
+            String firstNameError = InputValidator.validateFirstName(firstName);
+            String lastNameError = InputValidator.validateLastName(lastName);
+            
+            if (studentIdError != null || firstNameError != null || lastNameError != null) {
+                StringBuilder errorMsg = new StringBuilder();
+                if (studentIdError != null) errorMsg.append(studentIdError).append(" ");
+                if (firstNameError != null) errorMsg.append(firstNameError).append(" ");
+                if (lastNameError != null) errorMsg.append(lastNameError).append(" ");
+                throw new RuntimeException(errorMsg.toString().trim());
             }
             
+            // Sanitize inputs
+            studentId = InputValidator.sanitizeInput(studentId);
+            firstName = InputValidator.sanitizeInput(firstName);
+            lastName = InputValidator.sanitizeInput(lastName);
+            
             // Check if student ID already exists
-            if (studentDao.studentIdExists(studentId.trim())) {
-                throw new RuntimeException("Student ID '" + studentId.trim() + "' already exists!");
+            if (studentDao.studentIdExists(studentId)) {
+                throw new RuntimeException("Student ID '" + studentId + "' already exists!");
             }
             
             Student student = new Student();
-            student.setStudentId(studentId.trim());
-            student.setFirstName(firstName.trim());
-            student.setLastName(lastName.trim());
+            student.setStudentId(studentId);
+            student.setFirstName(firstName);
+            student.setLastName(lastName);
             
             studentDao.addStudent(student);
             
@@ -226,12 +224,23 @@ public class StudentController {
             String firstName = request.getParameter("firstName");
             String lastName = request.getParameter("lastName");
             
-            // Validate inputs
-            if (studentId == null || studentId.trim().isEmpty() ||
-                firstName == null || firstName.trim().isEmpty() || 
-                lastName == null || lastName.trim().isEmpty()) {
-                throw new RuntimeException("All fields are required!");
+            // Validate inputs using InputValidator
+            String studentIdError = InputValidator.validateStudentId(studentId);
+            String firstNameError = InputValidator.validateFirstName(firstName);
+            String lastNameError = InputValidator.validateLastName(lastName);
+            
+            if (studentIdError != null || firstNameError != null || lastNameError != null) {
+                StringBuilder errorMsg = new StringBuilder();
+                if (studentIdError != null) errorMsg.append(studentIdError).append(" ");
+                if (firstNameError != null) errorMsg.append(firstNameError).append(" ");
+                if (lastNameError != null) errorMsg.append(lastNameError).append(" ");
+                throw new RuntimeException(errorMsg.toString().trim());
             }
+            
+            // Sanitize inputs
+            studentId = InputValidator.sanitizeInput(studentId);
+            firstName = InputValidator.sanitizeInput(firstName);
+            lastName = InputValidator.sanitizeInput(lastName);
             
             Student student = studentDao.getStudentById(id);
             if (student == null) {
@@ -256,14 +265,14 @@ public class StudentController {
                     throw new RuntimeException("Students can only update their own information!");
                 }
                 // Students cannot change their student ID
-                if (!student.getStudentId().equals(studentId.trim())) {
+                if (!student.getStudentId().equals(studentId)) {
                     throw new RuntimeException("Students cannot change their Student ID!");
                 }
             }
             
-            student.setStudentId(studentId.trim());
-            student.setFirstName(firstName.trim());
-            student.setLastName(lastName.trim());
+            student.setStudentId(studentId);
+            student.setFirstName(firstName);
+            student.setLastName(lastName);
             
             studentDao.updateStudent(student);
             
@@ -424,6 +433,7 @@ public class StudentController {
         }
         
     }
+    
     @GetMapping("/debugUser")
     public String debugUser(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

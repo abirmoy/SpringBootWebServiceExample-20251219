@@ -6,6 +6,8 @@ import com.example.ClassRosterWebService.Entity.Teacher;
 import com.example.ClassRosterWebService.Entity.Course;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +25,17 @@ public class TeacherController {
 
     @GetMapping("teachers")
     public String displayTeachers(Model model, HttpServletRequest request) {
+        // Check if user has permission to access teachers page
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean hasPermission = authentication.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || 
+                           a.getAuthority().equals("ROLE_TEACHER"));
+        
+        if (!hasPermission) {
+            model.addAttribute("errorMessage", "Access denied. You don't have permission to view teachers.");
+            return "accessDenied";
+        }
+        
         List<Teacher> teachers = teacherDao.getAllTeachers();
         List<String> tbc = teacherDao.getTeacherByCourse();
         List<Course> courses = courseDao.getAllCourses();
@@ -42,28 +55,62 @@ public class TeacherController {
 
     @GetMapping("editTeacher")
     public String editTeacher(HttpServletRequest request, Model model) {
-        int id = Integer.parseInt(request.getParameter("id"));
-        Teacher teacher = teacherDao.getTeacherById(id);
-        List<Course> courses = courseDao.getAllCourses();
+        // Check if user has permission to edit teachers
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean hasPermission = authentication.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || 
+                           a.getAuthority().equals("ROLE_TEACHER"));
         
-        if (teacher == null) {
-            model.addAttribute("errorMessage", "Teacher not found!");
+        if (!hasPermission) {
+            model.addAttribute("errorMessage", "Access denied. You don't have permission to edit teachers.");
+            return "accessDenied";
+        }
+        
+        String idParam = request.getParameter("id");
+        if (idParam == null || idParam.trim().isEmpty()) {
+            model.addAttribute("errorMessage", "Teacher ID is required.");
             return displayTeachers(model, request);
         }
         
-        // Check if teacher is assigned to any courses via teacherId
-        List<Course> assignedCourses = courseDao.getCoursesForTeacher(teacher);
-        boolean teacherAssignedToCourses = !assignedCourses.isEmpty();
-        
-        model.addAttribute("teacher", teacher);
-        model.addAttribute("courses", courses);
-        model.addAttribute("teacherAssignedToCourses", teacherAssignedToCourses);
-        
-        return "editTeacher";
+        try {
+            int id = Integer.parseInt(idParam);
+            Teacher teacher = teacherDao.getTeacherById(id);
+            List<Course> courses = courseDao.getAllCourses();
+            
+            if (teacher == null) {
+                model.addAttribute("errorMessage", "Teacher not found!");
+                return displayTeachers(model, request);
+            }
+            
+            // Check if teacher is assigned to any courses via teacherId
+            List<Course> assignedCourses = courseDao.getCoursesForTeacher(teacher);
+            boolean teacherAssignedToCourses = !assignedCourses.isEmpty();
+            
+            model.addAttribute("teacher", teacher);
+            model.addAttribute("courses", courses);
+            model.addAttribute("teacherAssignedToCourses", teacherAssignedToCourses);
+            
+            return "editTeacher";
+            
+        } catch (NumberFormatException e) {
+            model.addAttribute("errorMessage", "Invalid teacher ID format.");
+            return displayTeachers(model, request);
+        }
     }
 
     @PostMapping("updateTeacher")
     public String updateTeacher(HttpServletRequest request, Model model) {
+        // Check if user has permission to update teachers
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean hasPermission = authentication.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || 
+                           a.getAuthority().equals("ROLE_TEACHER"));
+        
+        if (!hasPermission) {
+            model.addAttribute("errorMessage", "Access denied. You don't have permission to update teachers.");
+            return "accessDenied";
+        }
+        
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             String firstName = request.getParameter("firstName");
@@ -111,9 +158,19 @@ public class TeacherController {
 
     @GetMapping("deleteTeacher")
     public String deleteTeacher(HttpServletRequest request, Model model) {
-        int id = Integer.parseInt(request.getParameter("id"));
+        // Check if user has permission to delete teachers
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean hasPermission = authentication.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        
+        if (!hasPermission) {
+            model.addAttribute("errorMessage", "Access denied. Only administrators can delete teachers.");
+            return "accessDenied";
+        }
         
         try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            
             // First check if teacher is assigned to any courses via teacherId
             Teacher teacher = teacherDao.getTeacherById(id);
             if (teacher == null) {
@@ -156,6 +213,16 @@ public class TeacherController {
 
     @PostMapping("addTeacher")
     public String addTeacher(HttpServletRequest request, Model model) {
+        // Check if user has permission to add teachers
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean hasPermission = authentication.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        
+        if (!hasPermission) {
+            model.addAttribute("errorMessage", "Access denied. Only administrators can add teachers.");
+            return "accessDenied";
+        }
+        
         try {
             String firstName = request.getParameter("firstName");
             String lastName = request.getParameter("lastName");
