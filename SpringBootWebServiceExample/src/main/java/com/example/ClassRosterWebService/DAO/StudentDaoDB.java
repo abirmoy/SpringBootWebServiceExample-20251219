@@ -2,6 +2,7 @@ package com.example.ClassRosterWebService.DAO;
 
 import com.example.ClassRosterWebService.Entity.Course;
 import com.example.ClassRosterWebService.Entity.Student;
+import com.example.ClassRosterWebService.Entity.Teacher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -37,7 +38,6 @@ public class StudentDaoDB implements StudentDao {
         }
     }
 
-    // ADD NEW METHOD: Get student by studentId (unique identifier)
     public Student getStudentByStudentId(String studentId) {
         try {
             final String GET_STUDENT_BY_STUDENT_ID = "SELECT * FROM student WHERE studentId = ?";
@@ -160,7 +160,27 @@ public class StudentDaoDB implements StudentDao {
             "WHERE cs.studentId = ? " +
             "ORDER BY c.name";
         
-        return jdbc.query(GET_COURSES_FOR_STUDENT, new CourseDaoDB.CourseMapper(), studentId);
+        List<Course> courses = jdbc.query(GET_COURSES_FOR_STUDENT, new CourseDaoDB.CourseMapper(), studentId);
+        
+        // Fetch teacher info for each course
+        for (Course course : courses) {
+            if (course != null) {
+                // Get teacher from course's teacherId
+                final String GET_TEACHER_FOR_COURSE = 
+                    "SELECT t.* FROM teacher t " +
+                    "WHERE t.id = (SELECT teacherId FROM course WHERE id = ?)";
+                
+                try {
+                    Teacher teacher = jdbc.queryForObject(GET_TEACHER_FOR_COURSE, new TeacherDaoDB.TeacherMapper(), course.getId());
+                    course.setTeacher(teacher);
+                } catch (DataAccessException ex) {
+                    // Teacher not found, leave as null
+                    course.setTeacher(null);
+                }
+            }
+        }
+        
+        return courses;
     }
 
     @Override
@@ -181,7 +201,6 @@ public class StudentDaoDB implements StudentDao {
         return count > 0;
     }
     
-    // NEW METHOD: Check if student ID exists
     public boolean studentIdExists(String studentId) {
         final String CHECK_STUDENT_ID = "SELECT COUNT(*) FROM student WHERE studentId = ?";
         int count = jdbc.queryForObject(CHECK_STUDENT_ID, Integer.class, studentId);
@@ -193,7 +212,7 @@ public class StudentDaoDB implements StudentDao {
         public Student mapRow(ResultSet rs, int index) throws SQLException {
             Student student = new Student();
             student.setId(rs.getInt("id"));
-            student.setStudentId(rs.getString("studentId"));  // ADD THIS LINE
+            student.setStudentId(rs.getString("studentId"));
             student.setFirstName(rs.getString("firstName"));
             student.setLastName(rs.getString("lastName"));
             return student;
